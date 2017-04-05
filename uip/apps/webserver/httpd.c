@@ -232,6 +232,7 @@ PT_THREAD(handle_output(struct httpd_state *s))
   int do_bootm(cmd_tbl_t *, int, int, char *argv[]);
   
   PT_BEGIN(&s->outputpt);
+  //printf("OUTPUT:%s",s->filename);
   if(strncmp(s->filename, http_firmware_cgi, sizeof(http_firmware_cgi)) == 0)
   {
 
