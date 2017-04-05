@@ -871,6 +871,7 @@ void board_init_f(ulong bootflag)
 #define SEL_LOAD_LINUX_WRITE_FLASH      2
 #define SEL_BOOT_FLASH                  3
 #define SEL_ENTER_CLI                   4
+#define SEL_ENTER_UIP                   6
 #define SEL_LOAD_BOOT_WRITE_FLASH_BY_SERIAL 7
 #define SEL_LOAD_BOOT_SDRAM             8
 #define SEL_LOAD_BOOT_WRITE_FLASH       9
@@ -885,6 +886,7 @@ void OperationSelect(void)
 #ifdef RALINK_CMDLINE
 	printf("   %d: Entr boot command line interface.\n", SEL_ENTER_CLI);
 #endif // RALINK_CMDLINE //
+	printf("   %d: System Enter UIP Recovery Mode.\n", SEL_ENTER_UIP);
 #ifdef RALINK_UPGRADE_BY_SERIAL
 	printf("   %d: Load Boot Loader code then write to Flash via Serial. \n", SEL_LOAD_BOOT_WRITE_FLASH_BY_SERIAL);
 #endif // RALINK_UPGRADE_BY_SERIAL //
@@ -1946,8 +1948,20 @@ void board_init_r (gd_t *id, ulong dest_addr)
 	    s = getenv ("bootdelay");
 	    timer1 = s ? (int)simple_strtol(s, NULL, 10) : CONFIG_BOOTDELAY;
 	}
+/*GPIO check: UIP start */
+	
+	if(gpio_decetion() > 0)
+	{
+		printf("\n\rUIP START.......\n");
+		eth_initialize(gd->bd);
+		run_command("uip start", 0);
+	}
+/*GPIO check: UIP start */	
+	
+	OperationSelect();
+	
 
-	OperationSelect();   
+	
 	while (timer1 > 0) {
 		--timer1;
 		/* delay 100 * 10ms */
@@ -1955,7 +1969,7 @@ void board_init_r (gd_t *id, ulong dest_addr)
 			if ((my_tmp = tstc()) != 0) {	/* we got a key press	*/
 				timer1 = 0;	/* no more delay	*/
 				BootType = getc();
-				if ((BootType < '0' || BootType > '5') && (BootType != '7') && (BootType != '8') && (BootType != '9'))
+				if ((BootType < '0' || BootType > '6') && (BootType != '7') && (BootType != '8') && (BootType != '9'))
 					BootType = '3';
 				printf("\n\rYou choosed %c\n\n", BootType);
 				break;
@@ -2083,6 +2097,11 @@ void board_init_r (gd_t *id, ulong dest_addr)
 			}
 			break;
 #endif // RALINK_CMDLINE //
+		case '6'://UIP Recovery Mode
+			printf("   \n%d: System Enter UIP Recovery Mode.\n", SEL_ENTER_UIP);
+			eth_initialize(gd->bd);
+			run_command("uip start", 0);
+			break;
 #ifdef RALINK_UPGRADE_BY_SERIAL
 		case '7':
 			printf("\n%d: System Load Boot Loader then write to Flash via Serial. \n", SEL_LOAD_BOOT_WRITE_FLASH_BY_SERIAL);
@@ -2822,4 +2841,37 @@ void disable_pcie(void)
 	val &= ~RALINK_PCIE_CLK_EN;
 	RALINK_REG(RT2880_CLKCFG1_REG) = val;
 #endif
+}
+
+int gpio_decetion(void)
+{
+	u32 val;
+	int gpio_count,gpio_tmp = 0;
+	
+	//set UBOOT_HTTPD gpio1(i2c_sd)_mode 1=1b1	
+	val=RALINK_REG(RT2880_SYS_CNTL_BASE+0x60);	
+	val|=0x01;
+	RALINK_REG(RT2880_SYS_CNTL_BASE+0x60)=val;
+	//set UBOOT_HTTPD gpio1(i2c_sd)_DIR 0=1b1
+	val=RALINK_REG(RT2880_REG_PIODIR);	
+	val&=~(1<<1);
+	RALINK_REG(RT2880_REG_PIODIR)=val;	
+	//GPIO DECETION
+	for(gpio_count = 0; gpio_count < 3; gpio_count++)
+	{
+		val = RALINK_REG(RT2880_REG_PIODATA);
+		val&= 1<<1;
+		if (val)
+		{
+			printf("\n\rBTN not Pressed");
+			udelay (1000000);
+		}
+		else
+		{
+			gpio_tmp++;
+			printf("\n\rBTN has be Pressed.......%d", gpio_tmp);
+			udelay (1000000);
+		}
+	}
+	return gpio_tmp;
 }

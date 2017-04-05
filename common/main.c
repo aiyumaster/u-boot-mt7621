@@ -432,6 +432,9 @@ void main_loop (void)
 # ifdef CONFIG_AUTOBOOT_KEYED
 		disable_ctrlc(prev);	/* restore Control C checking */
 # endif
+		// something goes wrong!
+		printf("\n## Error: failed to boot linux !\nHTTPD server is starting...##\n\n");
+		run_command("uip start", 0);
 	}
 
 # ifdef CONFIG_MENUKEY

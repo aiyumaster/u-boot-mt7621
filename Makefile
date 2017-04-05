@@ -191,6 +191,7 @@ LIBS += cpu/$(CPU)/$(SOC)/lib$(SOC).a
 endif
 LIBS += lib_$(ARCH)/lib$(ARCH).a
 LIBS += net/libnet.a
+LIBS += uip/libuip.a
 
 #LIBS += rtc/librtc.a
 LIBS += drivers/libdrivers.a

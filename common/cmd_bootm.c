@@ -177,7 +177,7 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	char	*name, *s;
 	int	(*appl)(int, char *[]);
 	image_header_t *hdr = &header;
-
+	DECLARE_GLOBAL_DATA_PTR;
 
 	//mips_cache_set(3);
 
@@ -268,6 +268,8 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 #endif				
 			{	
 		SHOW_BOOT_PROGRESS (-1);
+		eth_initialize(gd->bd);
+		run_command("uip start", 0);
 		return 1;
 	    }
 	}
@@ -473,9 +475,11 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
                                 &destLen, (char *)data, len);
                 if (i != LZMA_RESULT_OK) {
                         printf ("LZMA ERROR %d - must RESET board to recover\n", i);
-                        SHOW_BOOT_PROGRESS (-6);
-                        udelay(100000);
-                        do_reset (cmdtp, flag, argc, argv);
+						eth_initialize(gd->bd);
+						run_command("uip start", 0);
+                        //SHOW_BOOT_PROGRESS (-6);
+                        //udelay(100000);
+                        //do_reset (cmdtp, flag, argc, argv);
                 }
 #ifdef CONFIG_UNCOMPRESS_TIME
                 tAUncompress = get_ticks();

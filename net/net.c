@@ -94,7 +94,9 @@
 #if 0
 #define ET_DEBUG
 #endif
-
+/**uip  **/
+extern int NetUipLoop;
+void dev_received(volatile uchar * inpkt, int len);
 /** BOOTP EXTENTIONS **/
 
 IPaddr_t	NetOurSubnetMask=0;		/* Our subnet mask (0=unknown)	*/
@@ -1157,7 +1159,10 @@ NetReceive(volatile uchar * inpkt, int len)
 #ifdef ET_DEBUG
 	printf("packet received\n");
 #endif
-
+	 if(NetUipLoop) {
+		dev_received(inpkt, len);
+		return;
+	}
 	NetRxPkt = inpkt;
 	NetRxPktLen = len;
 	et = (Ethernet_t *)inpkt;
