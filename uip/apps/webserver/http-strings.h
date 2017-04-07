@@ -13,7 +13,7 @@ extern const char http_host[7];
 extern const char http_crnl[3];
 extern const char http_index_html[12];
 extern const char http_404_html[10];
-extern const char http_about_html[12];
+extern const char http_flashing_html[15];
 extern const char http_art_html[10];
 extern const char http_fail_html[11];
 extern const char http_uboot_html[12];

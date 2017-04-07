@@ -80,7 +80,7 @@
 
 char content_boundary[80]; /* winfred: length should be the same as inputbuf */
 // U-Boot partition size
-#define WEBFAILSAFE_UPLOAD_UBOOT_SIZE_IN_BYTES		(128 * 1024)
+#define WEBFAILSAFE_UPLOAD_UBOOT_SIZE_IN_BYTES		(192 * 1024)
 // ART partition size
 #define WEBFAILSAFE_UPLOAD_ART_SIZE_IN_BYTES		(64 * 1024)
 
@@ -232,11 +232,10 @@ PT_THREAD(handle_output(struct httpd_state *s))
   int do_bootm(cmd_tbl_t *, int, int, char *argv[]);
   
   PT_BEGIN(&s->outputpt);
-  //printf("OUTPUT:%s",s->filename);
+  printf("OUTPUT:%s  \n",s->filename);
   if(strncmp(s->filename, http_firmware_cgi, sizeof(http_firmware_cgi)) == 0)
   {
-
-	  length = simple_strtoul(content_boundary, NULL, 16);
+  	  length = simple_strtoul(content_boundary, NULL, 16);
 	  length -= CFG_HTTP_DL_ADDR;
 	  printf( "\n\n****************************\n*FIRMWARE UPGRADING*\n* DO NOT POWER OFF YOUR ROUTER! *\n****************************\n\n" );
 	  raspi_erase_write((u8 *)CFG_HTTP_DL_ADDR, CFG_KERN_ADDR-CFG_FLASH_BASE, length);
@@ -247,7 +246,6 @@ PT_THREAD(handle_output(struct httpd_state *s))
   }
   else if(strncmp(s->filename, http_uboot_cgi, sizeof(http_uboot_cgi)) == 0)
   {
-
 	  printf( "\n\n****************************\n*U-BOOT UPGRADING*\n* DO NOT POWER OFF YOUR ROUTER! *\n****************************\n\n" );
 	  raspi_erase_write((u8 *)CFG_HTTP_DL_ADDR, CFG_FLASH_BASE - CFG_FLASH_BASE, WEBFAILSAFE_UPLOAD_UBOOT_SIZE_IN_BYTES);
 	  printf("HTTP ugrade uboot done! Rebooting...\n\n");
@@ -257,7 +255,6 @@ PT_THREAD(handle_output(struct httpd_state *s))
   }
   else if(strncmp(s->filename, http_art_cgi, sizeof(http_art_cgi)) == 0)
   {
-
 	  printf( "\n\n****************************\n*Factory  UPGRADING*\n* DO NOT POWER OFF YOUR ROUTER! *\n****************************\n\n" );
 	  raspi_erase_write((u8 *)CFG_HTTP_DL_ADDR, CFG_FACTORY_ADDR - CFG_FLASH_BASE, WEBFAILSAFE_UPLOAD_ART_SIZE_IN_BYTES);
 	  printf("HTTP ugrade Factory done! Rebooting...\n\n");
@@ -300,12 +297,18 @@ PT_THREAD(handle_input(struct httpd_state *s))
 
   PSOCK_READTO(&s->sin, ISO_space);//等待空格符  
   
-  if(strncmp(s->inputbuf, http_get, 4) != 0 && //不是GET和POST就退出结束
-      strncmp(s->inputbuf, http_post, 5) != 0) {
-    PSOCK_CLOSE_EXIT(&s->sin);
+  printf("OUTPUT:%s   \n",s->inputbuf); //debug
+  
+  if(strncmp(s->inputbuf, http_get, 4) != 0) //不是GET和POST就退出结束 
+  {
+	  if(strncmp(s->inputbuf, http_post, 5) != 0)
+	  {
+		  PSOCK_CLOSE_EXIT(&s->sin);
+	  }
   }
   PSOCK_READTO(&s->sin, ISO_space); //等待空格符
-
+  
+  printf("OUTPUT:%s   \n",s->inputbuf); //debug
   if(s->inputbuf[0] != ISO_slash) {//不是'/'就退出结束  
     PSOCK_CLOSE_EXIT(&s->sin);
   }
